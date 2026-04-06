@@ -15,12 +15,11 @@ import {
 } from "../../config/sessions.js";
 import type { TypingMode } from "../../config/types.js";
 import { emitAgentEvent } from "../../infra/agent-events.js";
-import { emitDiagnosticEvent, isDiagnosticsEnabled } from "../../infra/diagnostic-events.js";
 import { generateSecureUuid } from "../../infra/secure-random.js";
 import { enqueueSystemEvent } from "../../infra/system-events.js";
 import { CommandLaneClearedError, GatewayDrainingError } from "../../process/command-queue.js";
 import { defaultRuntime } from "../../runtime.js";
-import { estimateUsageCost, resolveModelCostConfig } from "../../utils/usage-format.js";
+import { resolveModelCostConfig } from "../../utils/usage-format.js";
 import {
   buildFallbackClearedNotice,
   buildFallbackNotice,
@@ -440,7 +439,6 @@ export async function runReplyAgent(params: {
       });
 
     replyOperation.setPhase("running");
-    const runStartedAt = Date.now();
     const runOutcome = await runAgentTurnWithFallback({
       commandBody,
       followupRun,
@@ -637,44 +635,6 @@ export async function runReplyAgent(params: {
         : replyPayloads;
 
     await signalTypingIfNeeded(guardedReplyPayloads, typingSignals);
-
-    if (isDiagnosticsEnabled(cfg) && hasNonzeroUsage(usage)) {
-      const input = usage.input ?? 0;
-      const output = usage.output ?? 0;
-      const cacheRead = usage.cacheRead ?? 0;
-      const cacheWrite = usage.cacheWrite ?? 0;
-      const promptTokens = input + cacheRead + cacheWrite;
-      const totalTokens = usage.total ?? promptTokens + output;
-      const costConfig = resolveModelCostConfig({
-        provider: providerUsed,
-        model: modelUsed,
-        config: cfg,
-      });
-      const costUsd = estimateUsageCost({ usage, cost: costConfig });
-      emitDiagnosticEvent({
-        type: "model.usage",
-        sessionKey,
-        sessionId: followupRun.run.sessionId,
-        channel: replyToChannel,
-        provider: providerUsed,
-        model: modelUsed,
-        usage: {
-          input,
-          output,
-          cacheRead,
-          cacheWrite,
-          promptTokens,
-          total: totalTokens,
-        },
-        lastCallUsage: runResult.meta?.agentMeta?.lastCallUsage,
-        context: {
-          limit: contextTokensUsed,
-          used: totalTokens,
-        },
-        costUsd,
-        durationMs: Date.now() - runStartedAt,
-      });
-    }
 
     const responseUsageRaw =
       activeSessionEntry?.responseUsage ??

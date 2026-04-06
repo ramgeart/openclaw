@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { importFreshModule } from "../../test/helpers/import-fresh.js";
-import { onDiagnosticEvent, resetDiagnosticEventsForTest } from "../infra/diagnostic-events.js";
 import {
   diagnosticSessionStates,
   getDiagnosticSessionStateCountForTest,
@@ -10,6 +9,7 @@ import {
   resetDiagnosticSessionStateForTest,
 } from "./diagnostic-session-state.js";
 import {
+  diagnosticLogger,
   logSessionStateChange,
   resetDiagnosticStateForTest,
   resolveStuckSessionWarnMs,
@@ -89,50 +89,33 @@ describe("stuck session diagnostics threshold", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     resetDiagnosticStateForTest();
-    resetDiagnosticEventsForTest();
   });
 
   afterEach(() => {
-    resetDiagnosticEventsForTest();
     resetDiagnosticStateForTest();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
   it("uses the configured diagnostics.stuckSessionWarnMs threshold", () => {
-    const events: Array<{ type: string }> = [];
-    const unsubscribe = onDiagnosticEvent((event) => {
-      events.push({ type: event.type });
+    const warnSpy = vi.spyOn(diagnosticLogger, "warn").mockImplementation(() => undefined);
+    startDiagnosticHeartbeat({
+      diagnostics: {
+        enabled: true,
+        stuckSessionWarnMs: 30_000,
+      },
     });
-    try {
-      startDiagnosticHeartbeat({
-        diagnostics: {
-          enabled: true,
-          stuckSessionWarnMs: 30_000,
-        },
-      });
-      logSessionStateChange({ sessionId: "s1", sessionKey: "main", state: "processing" });
-      vi.advanceTimersByTime(61_000);
-    } finally {
-      unsubscribe();
-    }
-
-    expect(events.filter((event) => event.type === "session.stuck")).toHaveLength(1);
+    logSessionStateChange({ sessionId: "s1", sessionKey: "main", state: "processing" });
+    vi.advanceTimersByTime(61_000);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("stuck session:"));
   });
 
   it("falls back to default threshold when config is absent", () => {
-    const events: Array<{ type: string }> = [];
-    const unsubscribe = onDiagnosticEvent((event) => {
-      events.push({ type: event.type });
-    });
-    try {
-      startDiagnosticHeartbeat();
-      logSessionStateChange({ sessionId: "s2", sessionKey: "main", state: "processing" });
-      vi.advanceTimersByTime(31_000);
-    } finally {
-      unsubscribe();
-    }
-
-    expect(events.filter((event) => event.type === "session.stuck")).toHaveLength(0);
+    const warnSpy = vi.spyOn(diagnosticLogger, "warn").mockImplementation(() => undefined);
+    startDiagnosticHeartbeat();
+    logSessionStateChange({ sessionId: "s2", sessionKey: "main", state: "processing" });
+    vi.advanceTimersByTime(31_000);
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("stuck session:"));
   });
 
   it("uses default threshold for invalid values", () => {

@@ -427,10 +427,6 @@
       "types": "./dist/plugin-sdk/diagnostic-runtime.d.ts",
       "default": "./dist/plugin-sdk/diagnostic-runtime.js"
     },
-    "./plugin-sdk/diagnostics-otel": {
-      "types": "./dist/plugin-sdk/diagnostics-otel.d.ts",
-      "default": "./dist/plugin-sdk/diagnostics-otel.js"
-    },
     "./plugin-sdk/diffs": {
       "types": "./dist/plugin-sdk/diffs.d.ts",
       "default": "./dist/plugin-sdk/diffs.js"

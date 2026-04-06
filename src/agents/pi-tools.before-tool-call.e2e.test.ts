@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  onDiagnosticEvent,
   resetDiagnosticEventsForTest,
   type DiagnosticToolLoopEvent,
 } from "../infra/diagnostic-events.js";
 import { resetDiagnosticSessionStateForTest } from "../logging/diagnostic-session-state.js";
+import { diagnosticLogger } from "../logging/diagnostic.js";
 import { getGlobalHookRunner } from "../plugins/hook-runner-global.js";
 import {
   runBeforeToolCallHook,
@@ -69,20 +69,70 @@ describe("before_tool_call loop detection behavior", () => {
     );
   }
 
+  function parseToolLoopEvent(
+    level: DiagnosticToolLoopEvent["level"],
+    value: unknown,
+  ): DiagnosticToolLoopEvent | null {
+    if (typeof value !== "string" || !value.startsWith("tool loop:")) {
+      return null;
+    }
+
+    const read = (pattern: RegExp) => value.match(pattern)?.[1];
+    const detector = read(/\bdetector=([^\s]+)/);
+    const action = read(/\baction=([^\s]+)/);
+    const toolName = read(/\btool=([^\s]+)/);
+    const count = Number(read(/\bcount=(\d+)/) ?? NaN);
+    const message = read(/ message="([^"]*)"$/) ?? "";
+    if (
+      (detector !== "generic_repeat" &&
+        detector !== "known_poll_no_progress" &&
+        detector !== "global_circuit_breaker" &&
+        detector !== "ping_pong") ||
+      (action !== "warn" && action !== "block") ||
+      !toolName ||
+      !Number.isFinite(count)
+    ) {
+      return null;
+    }
+
+    return {
+      type: "tool.loop",
+      seq: 0,
+      ts: 0,
+      level,
+      action,
+      detector,
+      toolName,
+      count,
+      message,
+      sessionId: read(/\bsessionId=([^\s]+)/),
+      sessionKey: read(/\bsessionKey=([^\s]+)/),
+      pairedToolName: read(/\bpairedTool=([^\s]+)/),
+    };
+  }
+
   async function withToolLoopEvents(
     run: (emitted: DiagnosticToolLoopEvent[]) => Promise<void>,
     filter: (evt: DiagnosticToolLoopEvent) => boolean = () => true,
   ) {
     const emitted: DiagnosticToolLoopEvent[] = [];
-    const stop = onDiagnosticEvent((evt) => {
-      if (evt.type === "tool.loop" && filter(evt)) {
-        emitted.push(evt);
-      }
-    });
+    const capture =
+      (level: DiagnosticToolLoopEvent["level"]) =>
+      (...args: unknown[]) => {
+        const event = args
+          .map((arg) => parseToolLoopEvent(level, arg))
+          .find((candidate): candidate is DiagnosticToolLoopEvent => candidate != null);
+        if (event && filter(event)) {
+          emitted.push(event);
+        }
+      };
+    const warnSpy = vi.spyOn(diagnosticLogger, "warn").mockImplementation(capture("warning"));
+    const errorSpy = vi.spyOn(diagnosticLogger, "error").mockImplementation(capture("critical"));
     try {
       await run(emitted);
     } finally {
-      stop();
+      warnSpy.mockRestore();
+      errorSpy.mockRestore();
     }
   }
 

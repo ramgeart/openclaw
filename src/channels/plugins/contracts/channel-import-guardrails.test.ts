@@ -193,7 +193,6 @@ const LOCAL_EXTENSION_API_BARREL_GUARDS = [
   "acpx",
   "bluebubbles",
   "device-pair",
-  "diagnostics-otel",
   "discord",
   "diffs",
   "feishu",
