@@ -3587,7 +3587,7 @@ module.exports = {
     expect(record?.status).toBe("loaded");
   });
 
-  it("supports legacy plugins subscribing to diagnostic events from the root sdk", async () => {
+  it("keeps legacy root diagnostic subscriptions inert", async () => {
     useNoBundledPlugins();
     const seenKey = "__openclawLegacyRootDiagnosticSeen";
     delete (globalThis as Record<string, unknown>)[seenKey];
@@ -3640,12 +3640,7 @@ module.exports = {
         usage: { total: 1 },
       });
 
-      expect((globalThis as Record<string, unknown>)[seenKey]).toEqual([
-        {
-          type: "model.usage",
-          sessionKey: "agent:main:test:dm:peer",
-        },
-      ]);
+      expect((globalThis as Record<string, unknown>)[seenKey]).toEqual([]);
     } finally {
       delete (globalThis as Record<string, unknown>)[seenKey];
     }

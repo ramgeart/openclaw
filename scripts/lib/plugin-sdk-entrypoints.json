@@ -96,7 +96,6 @@
   "direct-dm",
   "device-bootstrap",
   "diagnostic-runtime",
-  "diagnostics-otel",
   "diffs",
   "error-runtime",
   "extension-shared",

@@ -3245,19 +3245,6 @@ Notes:
     flags: ["telegram.*"],
     stuckSessionWarnMs: 30000,
 
-    otel: {
-      enabled: false,
-      endpoint: "https://otel-collector.example.com:4318",
-      protocol: "http/protobuf", // http/protobuf | grpc
-      headers: { "x-tenant-id": "my-org" },
-      serviceName: "openclaw-gateway",
-      traces: true,
-      metrics: true,
-      logs: false,
-      sampleRate: 1.0,
-      flushIntervalMs: 5000,
-    },
-
     cacheTrace: {
       enabled: false,
       filePath: "~/.openclaw/logs/cache-trace.jsonl",
@@ -3272,14 +3259,6 @@ Notes:
 - `enabled`: master toggle for instrumentation output (default: `true`).
 - `flags`: array of flag strings enabling targeted log output (supports wildcards like `"telegram.*"` or `"*"`).
 - `stuckSessionWarnMs`: age threshold in ms for emitting stuck-session warnings while a session remains in processing state.
-- `otel.enabled`: enables the OpenTelemetry export pipeline (default: `false`).
-- `otel.endpoint`: collector URL for OTel export.
-- `otel.protocol`: `"http/protobuf"` (default) or `"grpc"`.
-- `otel.headers`: extra HTTP/gRPC metadata headers sent with OTel export requests.
-- `otel.serviceName`: service name for resource attributes.
-- `otel.traces` / `otel.metrics` / `otel.logs`: enable trace, metrics, or log export.
-- `otel.sampleRate`: trace sampling rate `0`–`1`.
-- `otel.flushIntervalMs`: periodic telemetry flush interval in ms.
 - `cacheTrace.enabled`: log cache trace snapshots for embedded runs (default: `false`).
 - `cacheTrace.filePath`: output path for cache trace JSONL (default: `$OPENCLAW_STATE_DIR/logs/cache-trace.jsonl`).
 - `cacheTrace.includeMessages` / `includePrompt` / `includeSystem`: control what is included in cache trace output (all default: `true`).

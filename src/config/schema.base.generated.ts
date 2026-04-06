@@ -132,7 +132,7 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
             type: "boolean",
             title: "Diagnostics Enabled",
             description:
-              "Master toggle for diagnostics instrumentation output in logs and telemetry wiring paths. Keep enabled for normal observability, and disable only in tightly constrained environments.",
+              "Master toggle for diagnostics instrumentation output in logs and debugging helpers. Keep enabled for normal observability, and disable only in tightly constrained environments.",
           },
           flags: {
             type: "array",
@@ -150,94 +150,6 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
             title: "Stuck Session Warning Threshold (ms)",
             description:
               "Age threshold in milliseconds for emitting stuck-session warnings while a session remains in processing state. Increase for long multi-tool turns to reduce false positives; decrease for faster hang detection.",
-          },
-          otel: {
-            type: "object",
-            properties: {
-              enabled: {
-                type: "boolean",
-                title: "OpenTelemetry Enabled",
-                description:
-                  "Enables OpenTelemetry export pipeline for traces, metrics, and logs based on configured endpoint/protocol settings. Keep disabled unless your collector endpoint and auth are fully configured.",
-              },
-              endpoint: {
-                type: "string",
-                title: "OpenTelemetry Endpoint",
-                description:
-                  "Collector endpoint URL used for OpenTelemetry export transport, including scheme and port. Use a reachable, trusted collector endpoint and monitor ingestion errors after rollout.",
-              },
-              protocol: {
-                anyOf: [
-                  {
-                    type: "string",
-                    const: "http/protobuf",
-                  },
-                  {
-                    type: "string",
-                    const: "grpc",
-                  },
-                ],
-                title: "OpenTelemetry Protocol",
-                description:
-                  'OTel transport protocol for telemetry export: "http/protobuf" or "grpc" depending on collector support. Use the protocol your observability backend expects to avoid dropped telemetry payloads.',
-              },
-              headers: {
-                type: "object",
-                propertyNames: {
-                  type: "string",
-                },
-                additionalProperties: {
-                  type: "string",
-                },
-                title: "OpenTelemetry Headers",
-                description:
-                  "Additional HTTP/gRPC metadata headers sent with OpenTelemetry export requests, often used for tenant auth or routing. Keep secrets in env-backed values and avoid unnecessary header sprawl.",
-              },
-              serviceName: {
-                type: "string",
-                title: "OpenTelemetry Service Name",
-                description:
-                  "Service name reported in telemetry resource attributes to identify this gateway instance in observability backends. Use stable names so dashboards and alerts remain consistent over deployments.",
-              },
-              traces: {
-                type: "boolean",
-                title: "OpenTelemetry Traces Enabled",
-                description:
-                  "Enable trace signal export to the configured OpenTelemetry collector endpoint. Keep enabled when latency/debug tracing is needed, and disable if you only want metrics/logs.",
-              },
-              metrics: {
-                type: "boolean",
-                title: "OpenTelemetry Metrics Enabled",
-                description:
-                  "Enable metrics signal export to the configured OpenTelemetry collector endpoint. Keep enabled for runtime health dashboards, and disable only if metric volume must be minimized.",
-              },
-              logs: {
-                type: "boolean",
-                title: "OpenTelemetry Logs Enabled",
-                description:
-                  "Enable log signal export through OpenTelemetry in addition to local logging sinks. Use this when centralized log correlation is required across services and agents.",
-              },
-              sampleRate: {
-                type: "number",
-                minimum: 0,
-                maximum: 1,
-                title: "OpenTelemetry Trace Sample Rate",
-                description:
-                  "Trace sampling rate (0-1) controlling how much trace traffic is exported to observability backends. Lower rates reduce overhead/cost, while higher rates improve debugging fidelity.",
-              },
-              flushIntervalMs: {
-                type: "integer",
-                minimum: 0,
-                maximum: 9007199254740991,
-                title: "OpenTelemetry Flush Interval (ms)",
-                description:
-                  "Interval in milliseconds for periodic telemetry flush from buffers to the collector. Increase to reduce export chatter, or lower for faster visibility during active incident response.",
-              },
-            },
-            additionalProperties: false,
-            title: "OpenTelemetry",
-            description:
-              "OpenTelemetry export settings for traces, metrics, and logs emitted by gateway components. Use this when integrating with centralized observability backends and distributed tracing pipelines.",
           },
           cacheTrace: {
             type: "object",
@@ -278,7 +190,7 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
         additionalProperties: false,
         title: "Diagnostics",
         description:
-          "Diagnostics controls for targeted tracing, telemetry export, and cache inspection during debugging. Keep baseline diagnostics minimal in production and enable deeper signals only when investigating issues.",
+          "Diagnostics controls for targeted tracing and cache inspection during debugging. Keep baseline diagnostics minimal in production and enable deeper signals only when investigating issues.",
       },
       logging: {
         type: "object",
@@ -22044,7 +21956,7 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
       label: "Diagnostics",
       group: "Diagnostics",
       order: 27,
-      help: "Diagnostics controls for targeted tracing, telemetry export, and cache inspection during debugging. Keep baseline diagnostics minimal in production and enable deeper signals only when investigating issues.",
+      help: "Diagnostics controls for targeted tracing and cache inspection during debugging. Keep baseline diagnostics minimal in production and enable deeper signals only when investigating issues.",
       tags: ["observability"],
     },
     logging: {
@@ -22263,11 +22175,6 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
       help: 'Wizard execution mode recorded as "local" or "remote" for the most recent setup flow. Use this to understand whether setup targeted direct local runtime or remote gateway topology.',
       tags: ["advanced"],
     },
-    "diagnostics.otel": {
-      label: "OpenTelemetry",
-      help: "OpenTelemetry export settings for traces, metrics, and logs emitted by gateway components. Use this when integrating with centralized observability backends and distributed tracing pipelines.",
-      tags: ["observability"],
-    },
     "diagnostics.cacheTrace": {
       label: "Cache Trace",
       help: "Cache-trace logging settings for observing cache decisions and payload context in embedded runs. Enable this temporarily for debugging and disable afterward to reduce sensitive log footprint.",
@@ -22345,7 +22252,7 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
     },
     "diagnostics.enabled": {
       label: "Diagnostics Enabled",
-      help: "Master toggle for diagnostics instrumentation output in logs and telemetry wiring paths. Keep enabled for normal observability, and disable only in tightly constrained environments.",
+      help: "Master toggle for diagnostics instrumentation output in logs and debugging helpers. Keep enabled for normal observability, and disable only in tightly constrained environments.",
       tags: ["observability"],
     },
     "diagnostics.flags": {
@@ -22357,56 +22264,6 @@ export const GENERATED_BASE_CONFIG_SCHEMA: BaseConfigSchemaResponse = {
       label: "Stuck Session Warning Threshold (ms)",
       help: "Age threshold in milliseconds for emitting stuck-session warnings while a session remains in processing state. Increase for long multi-tool turns to reduce false positives; decrease for faster hang detection.",
       tags: ["observability", "storage"],
-    },
-    "diagnostics.otel.enabled": {
-      label: "OpenTelemetry Enabled",
-      help: "Enables OpenTelemetry export pipeline for traces, metrics, and logs based on configured endpoint/protocol settings. Keep disabled unless your collector endpoint and auth are fully configured.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.endpoint": {
-      label: "OpenTelemetry Endpoint",
-      help: "Collector endpoint URL used for OpenTelemetry export transport, including scheme and port. Use a reachable, trusted collector endpoint and monitor ingestion errors after rollout.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.protocol": {
-      label: "OpenTelemetry Protocol",
-      help: 'OTel transport protocol for telemetry export: "http/protobuf" or "grpc" depending on collector support. Use the protocol your observability backend expects to avoid dropped telemetry payloads.',
-      tags: ["observability"],
-    },
-    "diagnostics.otel.headers": {
-      label: "OpenTelemetry Headers",
-      help: "Additional HTTP/gRPC metadata headers sent with OpenTelemetry export requests, often used for tenant auth or routing. Keep secrets in env-backed values and avoid unnecessary header sprawl.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.serviceName": {
-      label: "OpenTelemetry Service Name",
-      help: "Service name reported in telemetry resource attributes to identify this gateway instance in observability backends. Use stable names so dashboards and alerts remain consistent over deployments.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.traces": {
-      label: "OpenTelemetry Traces Enabled",
-      help: "Enable trace signal export to the configured OpenTelemetry collector endpoint. Keep enabled when latency/debug tracing is needed, and disable if you only want metrics/logs.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.metrics": {
-      label: "OpenTelemetry Metrics Enabled",
-      help: "Enable metrics signal export to the configured OpenTelemetry collector endpoint. Keep enabled for runtime health dashboards, and disable only if metric volume must be minimized.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.logs": {
-      label: "OpenTelemetry Logs Enabled",
-      help: "Enable log signal export through OpenTelemetry in addition to local logging sinks. Use this when centralized log correlation is required across services and agents.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.sampleRate": {
-      label: "OpenTelemetry Trace Sample Rate",
-      help: "Trace sampling rate (0-1) controlling how much trace traffic is exported to observability backends. Lower rates reduce overhead/cost, while higher rates improve debugging fidelity.",
-      tags: ["observability"],
-    },
-    "diagnostics.otel.flushIntervalMs": {
-      label: "OpenTelemetry Flush Interval (ms)",
-      help: "Interval in milliseconds for periodic telemetry flush from buffers to the collector. Increase to reduce export chatter, or lower for faster visibility during active incident response.",
-      tags: ["observability", "performance"],
     },
     "diagnostics.cacheTrace.enabled": {
       label: "Cache Trace Enabled",

@@ -1,6 +1,5 @@
 import { getRuntimeConfig } from "../config/config.js";
 import type { OpenClawConfig } from "../config/config.js";
-import { emitDiagnosticEvent } from "../infra/diagnostic-events.js";
 import {
   diagnosticSessionStates,
   getDiagnosticSessionState,
@@ -64,12 +63,6 @@ export function logWebhookReceived(params: {
       } total=${webhookStats.received}`,
     );
   }
-  emitDiagnosticEvent({
-    type: "webhook.received",
-    channel: params.channel,
-    updateType: params.updateType,
-    chatId: params.chatId,
-  });
   markActivity();
 }
 
@@ -89,13 +82,6 @@ export function logWebhookProcessed(params: {
       }`,
     );
   }
-  emitDiagnosticEvent({
-    type: "webhook.processed",
-    channel: params.channel,
-    updateType: params.updateType,
-    chatId: params.chatId,
-    durationMs: params.durationMs,
-  });
   markActivity();
 }
 
@@ -111,13 +97,6 @@ export function logWebhookError(params: {
       params.chatId ?? "unknown"
     } error="${params.error}" errors=${webhookStats.errors}`,
   );
-  emitDiagnosticEvent({
-    type: "webhook.error",
-    channel: params.channel,
-    updateType: params.updateType,
-    chatId: params.chatId,
-    error: params.error,
-  });
   markActivity();
 }
 
@@ -137,14 +116,6 @@ export function logMessageQueued(params: {
       } source=${params.source} queueDepth=${state.queueDepth} sessionState=${state.state}`,
     );
   }
-  emitDiagnosticEvent({
-    type: "message.queued",
-    sessionId: state.sessionId,
-    sessionKey: state.sessionKey,
-    channel: params.channel,
-    source: params.source,
-    queueDepth: state.queueDepth,
-  });
   markActivity();
 }
 
@@ -176,18 +147,6 @@ export function logMessageProcessed(params: {
       diag.debug(payload);
     }
   }
-  emitDiagnosticEvent({
-    type: "message.processed",
-    channel: params.channel,
-    chatId: params.chatId,
-    messageId: params.messageId,
-    sessionId: params.sessionId,
-    sessionKey: params.sessionKey,
-    durationMs: params.durationMs,
-    outcome: params.outcome,
-    reason: params.reason,
-    error: params.error,
-  });
   markActivity();
 }
 
@@ -214,15 +173,6 @@ export function logSessionStateChange(
       }`,
     );
   }
-  emitDiagnosticEvent({
-    type: "session.state",
-    sessionId: state.sessionId,
-    sessionKey: state.sessionKey,
-    prevState,
-    state: params.state,
-    reason: params.reason,
-    queueDepth: state.queueDepth,
-  });
   markActivity();
 }
 
@@ -233,35 +183,16 @@ export function logSessionStuck(params: SessionRef & { state: SessionStateValue;
       state.sessionKey ?? "unknown"
     } state=${params.state} age=${Math.round(params.ageMs / 1000)}s queueDepth=${state.queueDepth}`,
   );
-  emitDiagnosticEvent({
-    type: "session.stuck",
-    sessionId: state.sessionId,
-    sessionKey: state.sessionKey,
-    state: params.state,
-    ageMs: params.ageMs,
-    queueDepth: state.queueDepth,
-  });
   markActivity();
 }
 
 export function logLaneEnqueue(lane: string, queueSize: number) {
   diag.debug(`lane enqueue: lane=${lane} queueSize=${queueSize}`);
-  emitDiagnosticEvent({
-    type: "queue.lane.enqueue",
-    lane,
-    queueSize,
-  });
   markActivity();
 }
 
 export function logLaneDequeue(lane: string, waitMs: number, queueSize: number) {
   diag.debug(`lane dequeue: lane=${lane} waitMs=${waitMs} queueSize=${queueSize}`);
-  emitDiagnosticEvent({
-    type: "queue.lane.dequeue",
-    lane,
-    queueSize,
-    waitMs,
-  });
   markActivity();
 }
 
@@ -271,13 +202,6 @@ export function logRunAttempt(params: SessionRef & { runId: string; attempt: num
       params.sessionKey ?? "unknown"
     } runId=${params.runId} attempt=${params.attempt}`,
   );
-  emitDiagnosticEvent({
-    type: "run.attempt",
-    sessionId: params.sessionId,
-    sessionKey: params.sessionKey,
-    runId: params.runId,
-    attempt: params.attempt,
-  });
   markActivity();
 }
 
@@ -302,18 +226,6 @@ export function logToolLoopAction(
   } else {
     diag.warn(payload);
   }
-  emitDiagnosticEvent({
-    type: "tool.loop",
-    sessionId: params.sessionId,
-    sessionKey: params.sessionKey,
-    toolName: params.toolName,
-    level: params.level,
-    action: params.action,
-    detector: params.detector,
-    count: params.count,
-    message: params.message,
-    pairedToolName: params.pairedToolName,
-  });
   markActivity();
 }
 
@@ -375,17 +287,6 @@ export function startDiagnosticHeartbeat(
     diag.debug(
       `heartbeat: webhooks=${webhookStats.received}/${webhookStats.processed}/${webhookStats.errors} active=${activeCount} waiting=${waitingCount} queued=${totalQueued}`,
     );
-    emitDiagnosticEvent({
-      type: "diagnostic.heartbeat",
-      webhooks: {
-        received: webhookStats.received,
-        processed: webhookStats.processed,
-        errors: webhookStats.errors,
-      },
-      active: activeCount,
-      waiting: waitingCount,
-      queued: totalQueued,
-    });
 
     void loadCommandPollBackoffRuntime()
       .then(({ pruneStaleCommandPolls }) => {
