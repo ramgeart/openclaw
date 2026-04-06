@@ -1,9 +1,6 @@
 name: Workflow Sanity
 
 on:
-  pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -15,7 +12,6 @@ env:
 
 jobs:
   no-tabs:
-    if: github.event_name != 'workflow_dispatch'
     runs-on: blacksmith-16vcpu-ubuntu-2404
     steps:
       - name: Checkout
@@ -47,7 +43,6 @@ jobs:
           PY
 
   actionlint:
-    if: github.event_name != 'workflow_dispatch'
     runs-on: blacksmith-16vcpu-ubuntu-2404
     steps:
       - name: Checkout
