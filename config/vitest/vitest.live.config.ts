@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import baseConfig from "../../vitest.config.ts";
 import { BUNDLED_PLUGIN_LIVE_TEST_GLOB } from "./vitest.bundled-plugin-paths.ts";
+import { resolveVitestRepoPath } from "./vitest.shared.config.ts";
 
 const base = baseConfig as unknown as Record<string, unknown>;
 const baseTestWithProjects =
@@ -21,7 +22,10 @@ export default defineConfig({
     disableConsoleIntercept: true,
     maxWorkers: 1,
     setupFiles: [
-      ...new Set([...(baseTest.setupFiles ?? []), "../../test/setup-openclaw-runtime.ts"]),
+      ...new Set([
+        ...(baseTest.setupFiles ?? []),
+        resolveVitestRepoPath("test/setup-openclaw-runtime.ts"),
+      ]),
     ],
     include: ["src/**/*.live.test.ts", BUNDLED_PLUGIN_LIVE_TEST_GLOB],
     exclude,

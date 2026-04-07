@@ -159,7 +159,11 @@ export function resolveDefaultVitestPool(
   return "threads";
 }
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+export const vitestRepoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+export function resolveVitestRepoPath(relativePath: string): string {
+  return path.join(vitestRepoRoot, relativePath);
+}
+export const nonIsolatedRunnerPath = resolveVitestRepoPath("test/non-isolated-runner.ts");
 const isCI = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
 const isWindows = process.platform === "win32";
 const defaultPool = resolveDefaultVitestPool();
@@ -179,20 +183,20 @@ if (!isCI && localScheduling.throttledBySystem && shouldPrintVitestThrottle(proc
 }
 
 export const sharedVitestConfig = {
-  root: repoRoot,
+  root: vitestRepoRoot,
   resolve: {
     alias: [
       {
         find: "openclaw/extension-api",
-        replacement: path.join(repoRoot, "src", "extensionAPI.ts"),
+        replacement: path.join(vitestRepoRoot, "src", "extensionAPI.ts"),
       },
       ...pluginSdkSubpaths.map((subpath) => ({
         find: `openclaw/plugin-sdk/${subpath}`,
-        replacement: path.join(repoRoot, "src", "plugin-sdk", `${subpath}.ts`),
+        replacement: path.join(vitestRepoRoot, "src", "plugin-sdk", `${subpath}.ts`),
       })),
       {
         find: "openclaw/plugin-sdk",
-        replacement: path.join(repoRoot, "src", "plugin-sdk", "index.ts"),
+        replacement: path.join(vitestRepoRoot, "src", "plugin-sdk", "index.ts"),
       },
     ],
   },
@@ -203,7 +207,7 @@ export const sharedVitestConfig = {
     unstubGlobals: true,
     isolate: false,
     pool: defaultPool,
-    runner: "../../test/non-isolated-runner.ts",
+    runner: nonIsolatedRunnerPath,
     maxWorkers: isCI ? ciWorkers : localScheduling.maxWorkers,
     fileParallelism: isCI ? true : localScheduling.fileParallelism,
     forceRerunTriggers: [
@@ -304,7 +308,7 @@ export const sharedVitestConfig = {
       "ui/src/ui/app-gateway.sessions.node.test.ts",
       "ui/src/ui/chat/slash-command-executor.node.test.ts",
     ],
-    setupFiles: ["../../test/setup.ts"],
+    setupFiles: [resolveVitestRepoPath("test/setup.ts")],
     exclude: [
       "dist/**",
       "test/fixtures/**",

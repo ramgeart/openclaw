@@ -1,7 +1,7 @@
 import { defineProject } from "vitest/config";
 import { loadPatternListFromEnv, narrowIncludePatternsForCli } from "./vitest.pattern-file.ts";
 import { resolveVitestIsolation } from "./vitest.scoped-config.ts";
-import { sharedVitestConfig } from "./vitest.shared.config.ts";
+import { nonIsolatedRunnerPath, sharedVitestConfig } from "./vitest.shared.config.ts";
 import {
   unitTestAdditionalExcludePatterns,
   unitTestIncludePatterns,
@@ -40,9 +40,12 @@ export function createUnitVitestConfigWithOptions(
       ...sharedTest,
       name: options.name ?? "unit",
       isolate,
-      ...(isolate ? { runner: undefined } : { runner: "../../test/non-isolated-runner.ts" }),
+      ...(isolate ? { runner: undefined } : { runner: nonIsolatedRunnerPath }),
       setupFiles: [
-        ...new Set([...(sharedTest.setupFiles ?? []), "../../test/setup-openclaw-runtime.ts"]),
+        ...new Set([
+          ...(sharedTest.setupFiles ?? []),
+          nonIsolatedRunnerPath.replace("non-isolated-runner.ts", "setup-openclaw-runtime.ts"),
+        ]),
       ],
       include: loadIncludePatternsFromEnv(env) ?? cliIncludePatterns ?? defaultIncludePatterns,
       exclude: [

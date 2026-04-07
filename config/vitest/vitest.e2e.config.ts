@@ -2,6 +2,7 @@ import os from "node:os";
 import { defineConfig } from "vitest/config";
 import baseConfig from "../../vitest.config.ts";
 import { BUNDLED_PLUGIN_E2E_TEST_GLOB } from "./vitest.bundled-plugin-paths.ts";
+import { resolveVitestRepoPath } from "./vitest.shared.config.ts";
 
 const base = baseConfig as unknown as Record<string, unknown>;
 const isCI = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
@@ -32,7 +33,10 @@ export default defineConfig({
     maxWorkers: e2eWorkers,
     silent: !verboseE2E,
     setupFiles: [
-      ...new Set([...(baseTest.setupFiles ?? []), "../../test/setup-openclaw-runtime.ts"]),
+      ...new Set([
+        ...(baseTest.setupFiles ?? []),
+        resolveVitestRepoPath("test/setup-openclaw-runtime.ts"),
+      ]),
     ],
     include: ["test/**/*.e2e.test.ts", "src/**/*.e2e.test.ts", BUNDLED_PLUGIN_E2E_TEST_GLOB],
     exclude,

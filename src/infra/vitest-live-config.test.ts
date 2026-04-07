@@ -14,10 +14,15 @@ describe("live vitest config", () => {
   });
 
   it("includes live test globs and runtime setup", () => {
+    const setupFiles = Array.isArray(liveConfig.test?.setupFiles)
+      ? liveConfig.test.setupFiles
+      : liveConfig.test?.setupFiles
+        ? [liveConfig.test.setupFiles]
+        : [];
     expect(liveConfig.test?.include).toEqual([
       "src/**/*.live.test.ts",
       BUNDLED_PLUGIN_LIVE_TEST_GLOB,
     ]);
-    expect(liveConfig.test?.setupFiles).toContain("../../test/setup-openclaw-runtime.ts");
+    expect(setupFiles.some((entry) => entry.endsWith("test/setup-openclaw-runtime.ts"))).toBe(true);
   });
 });

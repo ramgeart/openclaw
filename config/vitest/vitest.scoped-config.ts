@@ -1,6 +1,10 @@
 import { defineConfig } from "vitest/config";
 import { narrowIncludePatternsForCli } from "./vitest.pattern-file.ts";
-import { sharedVitestConfig } from "./vitest.shared.config.ts";
+import {
+  nonIsolatedRunnerPath,
+  resolveVitestRepoPath,
+  sharedVitestConfig,
+} from "./vitest.shared.config.ts";
 
 function normalizePathPattern(value: string): string {
   return value.replaceAll("\\", "/");
@@ -55,6 +59,7 @@ export function createScopedVitestConfig(
   const base = sharedVitestConfig as Record<string, unknown>;
   const baseTest = sharedVitestConfig.test ?? {};
   const scopedDir = options?.dir;
+  const resolvedScopedDir = scopedDir ? resolveVitestRepoPath(scopedDir) : undefined;
   const cliInclude = narrowIncludePatternsForCli(include, options?.argv);
   const exclude = relativizeScopedPatterns(
     [...(baseTest.exclude ?? []), ...(options?.exclude ?? [])],
@@ -67,11 +72,11 @@ export function createScopedVitestConfig(
       ...(options?.setupFiles ?? []),
       ...(options?.includeOpenClawRuntimeSetup === false
         ? []
-        : ["../../test/setup-openclaw-runtime.ts"]),
+        : [resolveVitestRepoPath("test/setup-openclaw-runtime.ts")]),
     ]),
   ];
   const useNonIsolatedRunner = options?.useNonIsolatedRunner ?? !isolate;
-  const runner = useNonIsolatedRunner ? "../../test/non-isolated-runner.ts" : undefined;
+  const runner = useNonIsolatedRunner ? nonIsolatedRunnerPath : undefined;
 
   return defineConfig({
     ...base,
@@ -83,7 +88,7 @@ export function createScopedVitestConfig(
       isolate,
       ...(runner ? { runner } : { runner: undefined }),
       setupFiles,
-      ...(scopedDir ? { dir: scopedDir } : {}),
+      ...(resolvedScopedDir ? { dir: resolvedScopedDir } : {}),
       include: relativizeScopedPatterns(cliInclude ?? include, scopedDir),
       exclude,
       ...(options?.pool ? { pool: options.pool } : {}),

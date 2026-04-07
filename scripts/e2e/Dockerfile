@@ -28,7 +28,8 @@ RUN --mount=type=cache,id=openclaw-pnpm-store,target=/home/appuser/.local/share/
     pnpm install --frozen-lockfile
 
 COPY --chown=appuser:appuser tsconfig.json tsconfig.plugin-sdk.dts.json vitest.config.ts openclaw.mjs ./
-COPY --chown=appuser:appuser config ./config
+COPY --chown=appuser:appuser config/build ./config/build
+COPY --chown=appuser:appuser config/vitest ./config/vitest
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser test ./test
 COPY --chown=appuser:appuser scripts ./scripts
