@@ -19,7 +19,7 @@ export function createExtensionVoiceCallVitestConfig(
       env,
       name: "extension-voice-call",
       passWithNoTests: true,
-      setupFiles: ["test/setup.extensions.ts"],
+      setupFiles: ["../../test/setup.extensions.ts"],
     },
   );
 }

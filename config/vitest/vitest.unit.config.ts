@@ -40,9 +40,9 @@ export function createUnitVitestConfigWithOptions(
       ...sharedTest,
       name: options.name ?? "unit",
       isolate,
-      ...(isolate ? { runner: undefined } : { runner: "test/non-isolated-runner.ts" }),
+      ...(isolate ? { runner: undefined } : { runner: "../../test/non-isolated-runner.ts" }),
       setupFiles: [
-        ...new Set([...(sharedTest.setupFiles ?? []), "test/setup-openclaw-runtime.ts"]),
+        ...new Set([...(sharedTest.setupFiles ?? []), "../../test/setup-openclaw-runtime.ts"]),
       ],
       include: loadIncludePatternsFromEnv(env) ?? cliIncludePatterns ?? defaultIncludePatterns,
       exclude: [

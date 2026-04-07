@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { parseVitestProcessStats } from "../../config/vitest/vitest.system-load.ts";
 import baseConfig, {
   resolveDefaultVitestPool,
   resolveLocalVitestMaxWorkers,
   resolveLocalVitestScheduling,
 } from "../../vitest.config.ts";
-import { parseVitestProcessStats } from "../../vitest.system-load.ts";
 
 describe("resolveLocalVitestMaxWorkers", () => {
   it("uses a moderate local worker cap on larger hosts", () => {
@@ -203,7 +203,7 @@ describe("base vitest config", () => {
   });
 
   it("keeps the base setup file minimal", () => {
-    expect(baseConfig.test?.setupFiles).toEqual(["test/setup.ts"]);
+    expect(baseConfig.test?.setupFiles).toEqual(["../../test/setup.ts"]);
   });
 
   it("keeps the base runner non-isolated by default", () => {
@@ -224,11 +224,11 @@ describe("test scripts", () => {
       "OPENCLAW_VITEST_MAX_WORKERS=1 node scripts/run-vitest.mjs run --config vitest.config.ts",
     );
     expect(pkg.scripts?.["test:fast"]).toBe(
-      "node scripts/run-vitest.mjs run --config vitest.unit.config.ts",
+      "node scripts/run-vitest.mjs run --config config/vitest/vitest.unit.config.ts",
     );
     expect(pkg.scripts?.["test"]).toBe("node scripts/run-vitest.mjs run --config vitest.config.ts");
     expect(pkg.scripts?.["test:gateway"]).toBe(
-      "node scripts/run-vitest.mjs run --config vitest.gateway.config.ts",
+      "node scripts/run-vitest.mjs run --config config/vitest/vitest.gateway.config.ts",
     );
     expect(pkg.scripts?.["test:single"]).toBeUndefined();
   });

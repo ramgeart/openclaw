@@ -14,7 +14,7 @@ import {
 const ROOT_SRC = "src/index.ts";
 const ROOT_TSCONFIG = "tsconfig.json";
 const ROOT_PACKAGE = "package.json";
-const ROOT_TSDOWN = "tsdown.config.ts";
+const ROOT_TSDOWN = "config/build/tsdown.config.ts";
 const DIST_ENTRY = "dist/entry.js";
 const BUILD_STAMP = "dist/.buildstamp";
 const EXTENSION_SRC = bundledPluginFile("demo", "src/index.ts");

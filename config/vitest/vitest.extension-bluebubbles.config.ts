@@ -19,7 +19,7 @@ export function createExtensionBlueBubblesVitestConfig(
       env,
       name: "extension-bluebubbles",
       passWithNoTests: true,
-      setupFiles: ["test/setup.extensions.ts"],
+      setupFiles: ["../../test/setup.extensions.ts"],
     },
   );
 }

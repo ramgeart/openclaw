@@ -19,7 +19,7 @@ export function createExtensionDiffsVitestConfig(
       env,
       name: "extension-diffs",
       passWithNoTests: true,
-      setupFiles: ["test/setup.extensions.ts"],
+      setupFiles: ["../../test/setup.extensions.ts"],
     },
   );
 }

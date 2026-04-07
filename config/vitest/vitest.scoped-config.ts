@@ -65,11 +65,13 @@ export function createScopedVitestConfig(
     ...new Set([
       ...(baseTest.setupFiles ?? []),
       ...(options?.setupFiles ?? []),
-      ...(options?.includeOpenClawRuntimeSetup === false ? [] : ["test/setup-openclaw-runtime.ts"]),
+      ...(options?.includeOpenClawRuntimeSetup === false
+        ? []
+        : ["../../test/setup-openclaw-runtime.ts"]),
     ]),
   ];
   const useNonIsolatedRunner = options?.useNonIsolatedRunner ?? !isolate;
-  const runner = useNonIsolatedRunner ? "test/non-isolated-runner.ts" : undefined;
+  const runner = useNonIsolatedRunner ? "../../test/non-isolated-runner.ts" : undefined;
 
   return defineConfig({
     ...base,

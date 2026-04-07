@@ -19,7 +19,7 @@ export function createExtensionMemoryVitestConfig(
       env,
       name: "extension-memory",
       passWithNoTests: true,
-      setupFiles: ["test/setup.extensions.ts"],
+      setupFiles: ["../../test/setup.extensions.ts"],
     },
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import tsdownConfig from "../../config/build/tsdown.config.ts";
 import { bundledPluginRoot } from "../../test/helpers/bundled-plugin-paths.js";
-import tsdownConfig from "../../tsdown.config.ts";
 
 type TsdownConfigEntry = {
   deps?: {
