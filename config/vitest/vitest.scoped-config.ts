@@ -69,7 +69,7 @@ export function createScopedVitestConfig(
     ]),
   ];
   const useNonIsolatedRunner = options?.useNonIsolatedRunner ?? !isolate;
-  const runner = useNonIsolatedRunner ? "./test/non-isolated-runner.ts" : undefined;
+  const runner = useNonIsolatedRunner ? "test/non-isolated-runner.ts" : undefined;
 
   return defineConfig({
     ...base,

@@ -443,7 +443,7 @@ function buildRunNodeDeps(env) {
       name: sourceRoot,
       path: path.join(cwd, sourceRoot),
     })),
-    configFiles: ["tsconfig.json", "package.json", "tsdown.config.ts"].map((filePath) =>
+    configFiles: ["tsconfig.json", "package.json", "config/build/tsdown.config.ts"].map((filePath) =>
       path.join(cwd, filePath),
     ),
   };

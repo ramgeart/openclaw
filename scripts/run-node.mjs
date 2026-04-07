@@ -15,7 +15,7 @@ const buildScript = "scripts/tsdown-build.mjs";
 const compilerArgs = [buildScript, "--no-clean"];
 
 const runNodeSourceRoots = ["src", BUNDLED_PLUGIN_ROOT_DIR];
-const runNodeConfigFiles = ["tsconfig.json", "package.json", "tsdown.config.ts"];
+const runNodeConfigFiles = ["tsconfig.json", "package.json", "config/build/tsdown.config.ts"];
 export const runNodeWatchedPaths = [...runNodeSourceRoots, ...runNodeConfigFiles];
 const extensionSourceFilePattern = /\.(?:[cm]?[jt]sx?)$/;
 const extensionRestartMetadataFiles = new Set(["openclaw.plugin.json", "package.json"]);

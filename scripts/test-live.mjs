@@ -38,7 +38,7 @@ let lastOutputAt = startedAt;
 
 const child = spawnPnpmRunner({
   stdio: ["inherit", "pipe", "pipe"],
-  pnpmArgs: ["exec", "vitest", "run", "--config", "vitest.live.config.ts", ...forwardedArgs],
+  pnpmArgs: ["exec", "vitest", "run", "--config", "config/vitest/vitest.live.config.ts", ...forwardedArgs],
   env,
 });
 

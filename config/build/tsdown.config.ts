@@ -4,8 +4,8 @@ import { defineConfig, type UserConfig } from "tsdown";
 import {
   listBundledPluginBuildEntries,
   listBundledPluginRuntimeDependencies,
-} from "./scripts/lib/bundled-plugin-build-entries.mjs";
-import { buildPluginSdkEntrySources } from "./scripts/lib/plugin-sdk-entries.mjs";
+} from "../../scripts/lib/bundled-plugin-build-entries.mjs";
+import { buildPluginSdkEntrySources } from "../../scripts/lib/plugin-sdk-entries.mjs";
 
 type InputOptionsFactory = Extract<NonNullable<UserConfig["inputOptions"]>, Function>;
 type InputOptionsArg = InputOptionsFactory extends (
