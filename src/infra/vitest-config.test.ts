@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { resolveVitestRepoPath } from "../../config/vitest/vitest.shared.config.ts";
 import { parseVitestProcessStats } from "../../config/vitest/vitest.system-load.ts";
 import baseConfig, {
   resolveDefaultVitestPool,
@@ -203,8 +204,7 @@ describe("base vitest config", () => {
   });
 
   it("keeps the base setup file minimal", () => {
-    expect(baseConfig.test?.setupFiles).toHaveLength(1);
-    expect(baseConfig.test?.setupFiles?.[0]?.endsWith("test/setup.ts")).toBe(true);
+    expect(baseConfig.test?.setupFiles).toEqual([resolveVitestRepoPath("test/setup.ts")]);
   });
 
   it("keeps the base runner non-isolated by default", () => {
