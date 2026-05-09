@@ -84,15 +84,10 @@ describe("docker base image pinning", () => {
     }
   });
 
-  it("keeps Dependabot Docker updates enabled for root Dockerfiles", async () => {
+  it("keeps Dependabot updates disabled in the fork", async () => {
     const raw = await readFile(resolve(repoRoot, ".github/dependabot.yml"), "utf8");
     const config = parse(raw) as DependabotConfig;
-    const dockerUpdate = config.updates?.find(
-      (update) => update["package-ecosystem"] === "docker" && update.directory === "/",
-    );
 
-    expect(dockerUpdate).toBeDefined();
-    expect(dockerUpdate?.schedule?.interval).toBe("weekly");
-    expect(dockerUpdate?.groups?.["docker-images"]?.patterns).toContain("*");
+    expect(config.updates ?? []).toEqual([]);
   });
 });

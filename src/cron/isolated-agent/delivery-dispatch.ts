@@ -11,11 +11,13 @@ import { sleepWithAbort } from "../../infra/backoff.js";
 import type { OutboundDeliveryResult } from "../../infra/outbound/deliver.js";
 import { normalizeTargetForProvider } from "../../infra/outbound/target-normalization.js";
 import { logWarn, logError } from "../../logger.js";
-import type { CronJob, CronRunTelemetry } from "../types.js";
+import type { CronJob, CronRunDetails } from "../types.js";
 import type { DeliveryTargetResolution } from "./delivery-target.js";
 import { pickSummaryFromOutput } from "./helpers.js";
 import type { RunCronAgentTurnResult } from "./run.js";
 import { expectsSubagentFollowup, isLikelyInterimCronMessage } from "./subagent-followup-hints.js";
+
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
 
 function normalizeDeliveryTarget(channel: string, to: string): string {
   const toTrimmed = to.trim();
@@ -71,7 +73,7 @@ type DispatchCronDeliveryParams = {
   synthesizedText?: string;
   summary?: string;
   outputText?: string;
-  telemetry?: CronRunTelemetry;
+  runDetails?: CronRunDetails;
   abortSignal?: AbortSignal;
   isAborted: () => boolean;
   abortReason: () => string;
@@ -159,7 +161,7 @@ function cloneDeliveryResults(
 }
 
 function pruneCompletedDirectCronDeliveries(now: number) {
-  const ttlMs = process.env.OPENCLAW_TEST_FAST === "1" ? 60_000 : 24 * 60 * 60 * 1000;
+  const ttlMs = env?.OPENCLAW_TEST_FAST === "1" ? 60_000 : 24 * 60 * 60 * 1000;
   for (const [key, entry] of COMPLETED_DIRECT_CRON_DELIVERIES) {
     if (now - entry.ts >= ttlMs) {
       COMPLETED_DIRECT_CRON_DELIVERIES.delete(key);
@@ -312,7 +314,7 @@ function isTransientDirectCronDeliveryError(error: unknown): boolean {
 }
 
 function resolveDirectCronRetryDelaysMs(): readonly number[] {
-  return process.env.NODE_ENV === "test" && process.env.OPENCLAW_TEST_FAST === "1"
+  return env?.NODE_ENV === "test" && env?.OPENCLAW_TEST_FAST === "1"
     ? [8, 16, 32]
     : [5_000, 10_000, 20_000];
 }
@@ -368,7 +370,7 @@ export async function dispatchCronDelivery(
       summary,
       outputText,
       deliveryAttempted,
-      ...params.telemetry,
+      ...params.runDetails,
     });
   const cleanupDirectCronSessionIfNeeded = async (): Promise<void> => {
     if (!params.job.deleteAfterRun) {
@@ -398,7 +400,7 @@ export async function dispatchCronDelivery(
       outputText,
       delivered: false,
       deliveryAttempted: true,
-      ...params.telemetry,
+      ...params.runDetails,
     });
   };
 
@@ -436,7 +438,7 @@ export async function dispatchCronDelivery(
           status: "error",
           error: params.abortReason(),
           deliveryAttempted,
-          ...params.telemetry,
+          ...params.runDetails,
         });
       }
       if (
@@ -465,7 +467,7 @@ export async function dispatchCronDelivery(
           outputText,
           deliveryAttempted,
           delivered: false,
-          ...params.telemetry,
+          ...params.runDetails,
         });
       }
       deliveryAttempted = true;
@@ -548,7 +550,7 @@ export async function dispatchCronDelivery(
           outputText,
           error: String(err),
           deliveryAttempted,
-          ...params.telemetry,
+          ...params.runDetails,
         });
       }
       logError(
@@ -624,7 +626,7 @@ export async function dispatchCronDelivery(
         summary,
         outputText,
         deliveryAttempted,
-        ...params.telemetry,
+        ...params.runDetails,
       });
     }
     if (
@@ -643,7 +645,7 @@ export async function dispatchCronDelivery(
         summary,
         outputText,
         deliveryAttempted,
-        ...params.telemetry,
+        ...params.runDetails,
       });
     }
     if (isSilentReplyText(synthesizedText, SILENT_REPLY_TOKEN)) {
@@ -654,7 +656,7 @@ export async function dispatchCronDelivery(
         status: "error",
         error: params.abortReason(),
         deliveryAttempted,
-        ...params.telemetry,
+        ...params.runDetails,
       });
     }
     try {
@@ -684,7 +686,7 @@ export async function dispatchCronDelivery(
           summary,
           outputText,
           deliveryAttempted,
-          ...params.telemetry,
+          ...params.runDetails,
         }),
         delivered,
         deliveryAttempted,

@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { parseByteSize } from "../cli/parse-bytes.js";
 import type { CronConfig } from "../config/types.cron.js";
-import type { CronDeliveryStatus, CronRunStatus, CronRunTelemetry } from "./types.js";
+import type { CronDeliveryStatus, CronRunDetails, CronRunStatus } from "./types.js";
 
 export type CronRunLogEntry = {
   ts: number;
@@ -19,7 +19,7 @@ export type CronRunLogEntry = {
   runAtMs?: number;
   durationMs?: number;
   nextRunAtMs?: number;
-} & CronRunTelemetry;
+} & CronRunDetails;
 
 export type CronRunLogSortDir = "asc" | "desc";
 export type CronRunLogStatusFilter = "all" | "ok" | "error" | "skipped";
@@ -111,7 +111,7 @@ async function drainPendingWrite(filePath: string): Promise<void> {
   const resolved = path.resolve(filePath);
   const pending = writesByPath.get(resolved);
   if (pending) {
-    await pending.catch(() => undefined);
+    await pending.catch((error: unknown) => undefined);
   }
 }
 
@@ -124,11 +124,10 @@ async function pruneIfNeeded(filePath: string, opts: { maxBytes: number; keepLin
   const raw = await fs.readFile(filePath, "utf-8").catch(() => "");
   const lines = raw
     .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
+    .map((line: string) => line.trim())
+    .filter((line: string) => line.length > 0);
   const kept = lines.slice(Math.max(0, lines.length - opts.keepLines));
-  const { randomBytes } = await import("node:crypto");
-  const tmp = `${filePath}.${process.pid}.${randomBytes(8).toString("hex")}.tmp`;
+  const tmp = `${filePath}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
   await fs.writeFile(tmp, `${kept.join("\n")}\n`, { encoding: "utf-8", mode: 0o600 });
   await setSecureFileMode(tmp);
   await fs.rename(tmp, filePath);
@@ -397,7 +396,7 @@ export async function readCronRunLogEntriesPageAll(
   const sortDir: CronRunLogSortDir = opts.sortDir === "asc" ? "asc" : "desc";
   const runsDir = path.resolve(path.dirname(path.resolve(opts.storePath)), "runs");
   const files = await fs.readdir(runsDir, { withFileTypes: true }).catch(() => []);
-  const jsonlFiles = files
+  const jsonlFiles: string[] = (files as Array<{ isFile: () => boolean; name: string }>)
     .filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl"))
     .map((entry) => path.join(runsDir, entry.name));
   if (jsonlFiles.length === 0) {
@@ -410,9 +409,9 @@ export async function readCronRunLogEntriesPageAll(
       nextOffset: null,
     };
   }
-  await Promise.all(jsonlFiles.map((f) => drainPendingWrite(f)));
+  await Promise.all(jsonlFiles.map((filePath: string) => drainPendingWrite(filePath)));
   const chunks = await Promise.all(
-    jsonlFiles.map(async (filePath) => {
+    jsonlFiles.map(async (filePath: string) => {
       const raw = await fs.readFile(filePath, "utf-8").catch(() => "");
       return parseAllRunLogEntries(raw);
     }),

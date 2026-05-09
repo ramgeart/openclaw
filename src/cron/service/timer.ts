@@ -14,9 +14,9 @@ import type {
   CronDeliveryStatus,
   CronJob,
   CronMessageChannel,
+  CronRunDetails,
   CronRunOutcome,
   CronRunStatus,
-  CronRunTelemetry,
 } from "../types.js";
 import {
   computeJobPreviousRunAtMs,
@@ -51,7 +51,7 @@ const DEFAULT_FAILURE_ALERT_AFTER = 2;
 const DEFAULT_FAILURE_ALERT_COOLDOWN_MS = 60 * 60_000; // 1 hour
 
 type TimedCronRunOutcome = CronRunOutcome &
-  CronRunTelemetry & {
+  CronRunDetails & {
     jobId: string;
     taskRunId?: string;
     delivered?: boolean;
@@ -80,7 +80,7 @@ export async function executeJobCoreWithTimeout(
   }
 
   const runAbortController = new AbortController();
-  let timeoutId: NodeJS.Timeout | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       executeJobCore(state, job, runAbortController.signal),
@@ -1115,7 +1115,7 @@ export async function executeJobCore(
   job: CronJob,
   abortSignal?: AbortSignal,
 ): Promise<
-  CronRunOutcome & CronRunTelemetry & { delivered?: boolean; deliveryAttempted?: boolean }
+  CronRunOutcome & CronRunDetails & { delivered?: boolean; deliveryAttempted?: boolean }
 > {
   const resolveAbortError = () => ({
     status: "error" as const,
@@ -1159,7 +1159,7 @@ async function executeMainSessionCronJob(
   abortSignal: AbortSignal | undefined,
   waitWithAbort: (ms: number) => Promise<void>,
 ): Promise<
-  CronRunOutcome & CronRunTelemetry & { delivered?: boolean; deliveryAttempted?: boolean }
+  CronRunOutcome & CronRunDetails & { delivered?: boolean; deliveryAttempted?: boolean }
 > {
   const text = resolveJobPayloadTextForMain(job);
   if (!text) {
@@ -1253,7 +1253,7 @@ async function executeDetachedCronJob(
   abortSignal: AbortSignal | undefined,
   resolveAbortError: () => { status: "error"; error: string },
 ): Promise<
-  CronRunOutcome & CronRunTelemetry & { delivered?: boolean; deliveryAttempted?: boolean }
+  CronRunOutcome & CronRunDetails & { delivered?: boolean; deliveryAttempted?: boolean }
 > {
   if (job.payload.kind !== "agentTurn") {
     return { status: "skipped", error: "isolated job requires payload.kind=agentTurn" };
@@ -1309,7 +1309,7 @@ export async function executeJob(
     status: CronRunStatus;
     delivered?: boolean;
   } & CronRunOutcome &
-    CronRunTelemetry;
+    CronRunDetails;
   try {
     coreResult = await executeJobCore(state, job);
   } catch (err) {
@@ -1341,7 +1341,7 @@ function emitJobFinished(
     status: CronRunStatus;
     delivered?: boolean;
   } & CronRunOutcome &
-    CronRunTelemetry,
+    CronRunDetails,
   runAtMs: number,
 ) {
   emit(state, {

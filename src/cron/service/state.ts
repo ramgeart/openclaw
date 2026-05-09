@@ -6,9 +6,9 @@ import type {
   CronJobCreate,
   CronJobPatch,
   CronMessageChannel,
+  CronRunDetails,
   CronRunOutcome,
   CronRunStatus,
-  CronRunTelemetry,
   CronStoreFile,
 } from "../types.js";
 
@@ -26,7 +26,7 @@ export type CronEvent = {
   sessionId?: string;
   sessionKey?: string;
   nextRunAtMs?: number;
-} & CronRunTelemetry;
+} & CronRunDetails;
 
 export type Logger = {
   debug: (obj: unknown, msg?: string) => void;
@@ -101,7 +101,7 @@ export type CronServiceDeps = {
        */
       deliveryAttempted?: boolean;
     } & CronRunOutcome &
-      CronRunTelemetry
+      CronRunDetails
   >;
   sendCronFailureAlert?: (params: {
     job: CronJob;
@@ -121,7 +121,7 @@ export type CronServiceDepsInternal = Omit<CronServiceDeps, "nowMs"> & {
 export type CronServiceState = {
   deps: CronServiceDepsInternal;
   store: CronStoreFile | null;
-  timer: NodeJS.Timeout | null;
+  timer: ReturnType<typeof setTimeout> | null;
   running: boolean;
   op: Promise<unknown>;
   warnedDisabled: boolean;

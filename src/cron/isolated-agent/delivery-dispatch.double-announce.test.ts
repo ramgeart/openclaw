@@ -141,7 +141,7 @@ function makeBaseParams(overrides: {
     synthesizedText: overrides.synthesizedText ?? "on it",
     summary: overrides.synthesizedText ?? "on it",
     outputText: overrides.synthesizedText ?? "on it",
-    telemetry: undefined,
+    runDetails: undefined,
     abortSignal: undefined,
     isAborted: () => false,
     abortReason: () => "aborted",
@@ -475,7 +475,10 @@ describe("dispatchCronDelivery — double-announce guard", () => {
   it("does not cache partial bestEffort delivery replays as delivered", async () => {
     vi.mocked(countActiveDescendantRuns).mockReturnValue(0);
     vi.mocked(isLikelyInterimCronMessage).mockReturnValue(false);
-    vi.mocked(deliverOutboundPayloads).mockImplementation(async (params) => {
+    vi.mocked(deliverOutboundPayloads).mockImplementation(async (params: {
+      payloads?: unknown[];
+      onError?: (error: Error, payload?: unknown) => void;
+    }) => {
       const failedPayload = Array.isArray(params.payloads) ? params.payloads[0] : undefined;
       params.onError?.(new Error("payload failed"), failedPayload as never);
       return [{ ok: true } as never];

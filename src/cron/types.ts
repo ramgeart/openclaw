@@ -54,7 +54,7 @@ export type CronUsageSummary = {
   cache_write_tokens?: number;
 };
 
-export type CronRunTelemetry = {
+export type CronRunDetails = {
   model?: string;
   provider?: string;
   usage?: CronUsageSummary;

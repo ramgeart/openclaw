@@ -19,7 +19,7 @@ type IsolatedRunResult = {
 };
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
-  let timeout: NodeJS.Timeout | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       promise,

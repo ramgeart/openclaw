@@ -12,6 +12,8 @@ import {
   resolveCronRunLogPath,
 } from "./run-log.js";
 
+const platform = (globalThis as { process?: { platform?: string } }).process?.platform;
+
 describe("cron run log", () => {
   it("resolves prune options from config with defaults", () => {
     expect(resolveCronRunLogPruneOptions()).toEqual({
@@ -87,15 +89,15 @@ describe("cron run log", () => {
       const raw = await fs.readFile(logPath, "utf-8");
       const lines = raw
         .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.length > 0);
       expect(lines.length).toBe(3);
       const last = JSON.parse(lines[2] ?? "{}") as { ts?: number };
       expect(last.ts).toBe(1009);
     });
   });
 
-  it.skipIf(process.platform === "win32")(
+  it.skipIf(platform === "win32")(
     "writes run log files with secure permissions",
     async () => {
       await withRunLogDir("openclaw-cron-log-perms-", async (dir) => {
@@ -114,7 +116,7 @@ describe("cron run log", () => {
     },
   );
 
-  it.skipIf(process.platform === "win32")(
+  it.skipIf(platform === "win32")(
     "hardens an existing run-log directory to owner-only permissions",
     async () => {
       await withRunLogDir("openclaw-cron-log-dir-perms-", async (dir) => {
@@ -223,8 +225,8 @@ describe("cron run log", () => {
     });
   });
 
-  it("reads telemetry fields", async () => {
-    await withRunLogDir("openclaw-cron-log-telemetry-", async (dir) => {
+  it("reads run details fields", async () => {
+    await withRunLogDir("openclaw-cron-log-details-", async (dir) => {
       const logPath = path.join(dir, "runs", "job-1.jsonl");
 
       await appendCronRunLog(logPath, {

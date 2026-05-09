@@ -4,7 +4,7 @@ import type { CliDeps } from "../../cli/outbound-send-deps.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { AgentDefaultsConfig } from "../../config/types.agent-defaults.js";
 import { resolveCronDeliveryPlan } from "../delivery-plan.js";
-import type { CronJob, CronRunOutcome, CronRunTelemetry } from "../types.js";
+import type { CronJob, CronRunDetails, CronRunOutcome } from "../types.js";
 import {
   dispatchCronDelivery,
   matchesMessagingToolDeliveryTarget,
@@ -57,6 +57,8 @@ import { resolveCronAgentSessionKey } from "./session-key.js";
 import { resolveCronSession } from "./session.js";
 import { resolveCronSkillsSnapshot } from "./skills-snapshot.js";
 
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+
 let sessionStoreRuntimePromise:
   | Promise<typeof import("../../config/sessions/store.runtime.js")>
   | undefined;
@@ -87,7 +89,7 @@ export type RunCronAgentTurnResult = {
    */
   deliveryAttempted?: boolean;
 } & CronRunOutcome &
-  CronRunTelemetry;
+  CronRunDetails;
 
 type ResolvedCronDeliveryTarget = Awaited<ReturnType<typeof resolveDeliveryTarget>>;
 
@@ -477,7 +479,7 @@ async function finalizeCronRun(params: {
   const { prepared, execution } = params;
   const finalRunResult = execution.runResult;
   const payloads = finalRunResult.payloads ?? [];
-  let telemetry: CronRunTelemetry | undefined;
+  let runDetails: CronRunDetails | undefined;
 
   if (finalRunResult.meta?.systemPromptReport) {
     prepared.cronSession.sessionEntry.systemPromptReport = finalRunResult.meta.systemPromptReport;
@@ -524,14 +526,14 @@ async function finalizeCronRun(params: {
     );
     prepared.cronSession.sessionEntry.inputTokens = input;
     prepared.cronSession.sessionEntry.outputTokens = output;
-    const telemetryUsage: NonNullable<CronRunTelemetry["usage"]> = {
+    const usageSummary: NonNullable<CronRunDetails["usage"]> = {
       input_tokens: input,
       output_tokens: output,
     };
     if (typeof totalTokens === "number" && Number.isFinite(totalTokens) && totalTokens > 0) {
       prepared.cronSession.sessionEntry.totalTokens = totalTokens;
       prepared.cronSession.sessionEntry.totalTokensFresh = true;
-      telemetryUsage.total_tokens = totalTokens;
+      usageSummary.total_tokens = totalTokens;
     } else {
       prepared.cronSession.sessionEntry.totalTokens = undefined;
       prepared.cronSession.sessionEntry.totalTokensFresh = false;
@@ -543,18 +545,18 @@ async function finalizeCronRun(params: {
         (resolveNonNegativeNumber(prepared.cronSession.sessionEntry.estimatedCostUsd) ?? 0) +
         runEstimatedCostUsd;
     }
-    telemetry = {
+    runDetails = {
       model: modelUsed,
       provider: providerUsed,
-      usage: telemetryUsage,
+      usage: usageSummary,
     };
   } else {
-    telemetry = { model: modelUsed, provider: providerUsed };
+    runDetails = { model: modelUsed, provider: providerUsed };
   }
   await prepared.persistSessionEntry();
 
   if (params.isAborted()) {
-    return prepared.withRunSession({ status: "error", error: params.abortReason(), ...telemetry });
+    return prepared.withRunSession({ status: "error", error: params.abortReason(), ...runDetails });
   }
   let {
     summary,
@@ -578,7 +580,7 @@ async function finalizeCronRun(params: {
       outputText,
       delivered: result?.delivered,
       deliveryAttempted: result?.deliveryAttempted,
-      ...telemetry,
+      ...runDetails,
     });
 
   const skipHeartbeatDelivery =
@@ -616,7 +618,7 @@ async function finalizeCronRun(params: {
     synthesizedText,
     summary,
     outputText,
-    telemetry,
+    runDetails,
     abortSignal: prepared.input.abortSignal ?? prepared.input.signal,
     isAborted: params.isAborted,
     abortReason: params.abortReason,
@@ -664,7 +666,7 @@ export async function runCronIsolatedAgentTurn(params: {
       ? reason.trim()
       : "cron: job execution timed out";
   };
-  const isFastTestEnv = process.env.OPENCLAW_TEST_FAST === "1";
+  const isFastTestEnv = env?.OPENCLAW_TEST_FAST === "1";
   const prepared = await prepareCronRunContext({ input: params, isFastTestEnv });
   if (!prepared.ok) {
     return prepared.result;

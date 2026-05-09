@@ -204,7 +204,7 @@ export function createRunningCronServiceState(params: {
   return state;
 }
 
-export function disposeCronServiceState(state: { timer: NodeJS.Timeout | null }): void {
+export function disposeCronServiceState(state: { timer: ReturnType<typeof setTimeout> | null }): void {
   if (state.timer) {
     clearTimeout(state.timer);
     state.timer = null;
@@ -212,7 +212,7 @@ export function disposeCronServiceState(state: { timer: NodeJS.Timeout | null })
 }
 
 export async function withCronServiceStateForTest<T>(
-  state: { timer: NodeJS.Timeout | null },
+  state: { timer: ReturnType<typeof setTimeout> | null },
   run: () => Promise<T>,
 ): Promise<T> {
   try {

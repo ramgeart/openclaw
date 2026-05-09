@@ -75,7 +75,7 @@ const KEYWORD_RULES: Array<{ pattern: RegExp; tags: ConfigTag[] }> = [
   { pattern: /(timeout|debounce|interval|concurrency|max|limit|cachettl)/i, tags: ["performance"] },
   { pattern: /(retry|backoff|fallback|circuit|health|reload|probe)/i, tags: ["reliability"] },
   { pattern: /(path|dir|file|store|db|session|cache)/i, tags: ["storage"] },
-  { pattern: /(telemetry|trace|metrics|logs|diagnostic)/i, tags: ["observability"] },
+  { pattern: /(trace|metrics|logs|diagnostic)/i, tags: ["observability"] },
   { pattern: /(experimental|dangerously|insecure)/i, tags: ["advanced", "security"] },
   { pattern: /(privacy|redact|sanitize|anonym|pseudonym)/i, tags: ["privacy"] },
 ];
